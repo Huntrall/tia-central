@@ -1,0 +1,708 @@
+{
+  "uid": "tia-device",
+  "title": "T.I.A. — Detalhe da máquina",
+  "tags": [
+    "tia"
+  ],
+  "timezone": "browser",
+  "editable": true,
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "host",
+        "label": "Máquina",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "tia-pg"
+        },
+        "query": "SELECT hostname FROM devices ORDER BY 1",
+        "definition": "SELECT hostname FROM devices ORDER BY 1",
+        "refresh": 1,
+        "includeAll": false,
+        "multi": false,
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "table",
+      "title": "Identificação",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "tia-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "tia-pg"
+          },
+          "rawSql": "\nSELECT hostname AS \"Máquina\", online::text AS \"Status\", health AS \"Saúde\", username AS \"Usuário\", ip AS \"IP\",\n       os AS \"Sistema\", agent_version AS \"Agente\", last_seen AS \"Último contato\", health_ts AS \"Último health check\"\nFROM device_overview WHERE hostname = '$host'",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "ok": {
+                        "text": "OK",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "warn": {
+                        "text": "Atenção",
+                        "color": "#F2CC0C",
+                        "index": 1
+                      },
+                      "crit": {
+                        "text": "Crítico",
+                        "color": "red",
+                        "index": 2
+                      },
+                      "true": {
+                        "text": "Online",
+                        "color": "green",
+                        "index": 3
+                      },
+                      "false": {
+                        "text": "Offline",
+                        "color": "red",
+                        "index": 4
+                      },
+                      "open": {
+                        "text": "Aberto",
+                        "color": "red",
+                        "index": 5
+                      },
+                      "resolved": {
+                        "text": "Normalizado",
+                        "color": "green",
+                        "index": 6
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Saúde"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "ok": {
+                        "text": "OK",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "warn": {
+                        "text": "Atenção",
+                        "color": "#F2CC0C",
+                        "index": 1
+                      },
+                      "crit": {
+                        "text": "Crítico",
+                        "color": "red",
+                        "index": 2
+                      },
+                      "true": {
+                        "text": "Online",
+                        "color": "green",
+                        "index": 3
+                      },
+                      "false": {
+                        "text": "Offline",
+                        "color": "red",
+                        "index": 4
+                      },
+                      "open": {
+                        "text": "Aberto",
+                        "color": "red",
+                        "index": 5
+                      },
+                      "resolved": {
+                        "text": "Normalizado",
+                        "color": "green",
+                        "index": 6
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "CPU e memória",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "tia-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "tia-pg"
+          },
+          "rawSql": "\nSELECT ts AS time, cpu AS \"CPU\", mem_percent AS \"Memória RAM\"\nFROM metrics WHERE hostname = '$host' AND $__timeFilter(ts) ORDER BY ts",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "max": 100
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Rede",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "tia-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 3,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "tia-pg"
+          },
+          "rawSql": "\nSELECT ts AS time, rx_bytes * 8 / 60.0 AS \"Download\", tx_bytes * 8 / 60.0 AS \"Upload\"\nFROM metrics WHERE hostname = '$host' AND $__timeFilter(ts) ORDER BY ts",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "table",
+      "title": "Último health check",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "tia-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 11,
+        "w": 14,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "tia-pg"
+          },
+          "rawSql": "\nSELECT c->>'label' AS \"Verificação\", c->>'value' AS \"Valor\", c->>'status' AS \"Situação\", c->>'hint' AS \"Orientação\"\nFROM (SELECT checks FROM health_reports WHERE hostname = '$host' ORDER BY ts DESC LIMIT 1) r,\n     jsonb_array_elements(r.checks) c\nORDER BY CASE c->>'status' WHEN 'crit' THEN 0 WHEN 'warn' THEN 1 ELSE 2 END",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Situação"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "ok": {
+                        "text": "OK",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "warn": {
+                        "text": "Atenção",
+                        "color": "#F2CC0C",
+                        "index": 1
+                      },
+                      "crit": {
+                        "text": "Crítico",
+                        "color": "red",
+                        "index": 2
+                      },
+                      "true": {
+                        "text": "Online",
+                        "color": "green",
+                        "index": 3
+                      },
+                      "false": {
+                        "text": "Offline",
+                        "color": "red",
+                        "index": 4
+                      },
+                      "open": {
+                        "text": "Aberto",
+                        "color": "red",
+                        "index": 5
+                      },
+                      "resolved": {
+                        "text": "Normalizado",
+                        "color": "green",
+                        "index": 6
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "Programas usando mais memória",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "tia-pg"
+      },
+      "gridPos": {
+        "x": 14,
+        "y": 11,
+        "w": 10,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "tia-pg"
+          },
+          "rawSql": "\nSELECT p->>'name' AS \"Processo\", (p->>'mem_mb')::int AS \"Memória (MB)\"\nFROM (SELECT top_processes FROM health_reports WHERE hostname = '$host' ORDER BY ts DESC LIMIT 1) r,\n     jsonb_array_elements(r.top_processes) p",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Consumo de rede por dia",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "tia-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "tia-pg"
+          },
+          "rawSql": "\nSELECT date_trunc('day', ts) AS time, sum(rx_bytes) AS \"Baixado\", sum(tx_bytes) AS \"Enviado\"\nFROM metrics WHERE hostname = '$host' AND $__timeFilter(ts) GROUP BY 1 ORDER BY 1",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "fillOpacity": 60,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Alertas desta máquina",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "tia-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "tia-pg"
+          },
+          "rawSql": "\nSELECT severity AS \"Nível\", title AS \"Alerta\", status AS \"Situação\", opened_at AS \"Aberto em\",\n       resolved_at AS \"Normalizado em\", glpi_ticket_id AS \"Chamado GLPI\"\nFROM alerts WHERE hostname = '$host' ORDER BY opened_at DESC LIMIT 100",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code"
+        }
+      ],
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Nível"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "ok": {
+                        "text": "OK",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "warn": {
+                        "text": "Atenção",
+                        "color": "#F2CC0C",
+                        "index": 1
+                      },
+                      "crit": {
+                        "text": "Crítico",
+                        "color": "red",
+                        "index": 2
+                      },
+                      "true": {
+                        "text": "Online",
+                        "color": "green",
+                        "index": 3
+                      },
+                      "false": {
+                        "text": "Offline",
+                        "color": "red",
+                        "index": 4
+                      },
+                      "open": {
+                        "text": "Aberto",
+                        "color": "red",
+                        "index": 5
+                      },
+                      "resolved": {
+                        "text": "Normalizado",
+                        "color": "green",
+                        "index": 6
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Situação"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "ok": {
+                        "text": "OK",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "warn": {
+                        "text": "Atenção",
+                        "color": "#F2CC0C",
+                        "index": 1
+                      },
+                      "crit": {
+                        "text": "Crítico",
+                        "color": "red",
+                        "index": 2
+                      },
+                      "true": {
+                        "text": "Online",
+                        "color": "green",
+                        "index": 3
+                      },
+                      "false": {
+                        "text": "Offline",
+                        "color": "red",
+                        "index": 4
+                      },
+                      "open": {
+                        "text": "Aberto",
+                        "color": "red",
+                        "index": 5
+                      },
+                      "resolved": {
+                        "text": "Normalizado",
+                        "color": "green",
+                        "index": 6
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    }
+  ],
+  "annotations": {
+    "list": []
+  }
+}

@@ -1,0 +1,76 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tia
+      POSTGRES_USER: tia
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD}
+      TZ: ${TZ:-America/Sao_Paulo}
+    volumes:
+      - tia-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tia -d tia"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://tia:${POSTGRES_PASSWORD}@db:5432/tia
+      AGENT_TOKEN: ${AGENT_TOKEN:?defina AGENT_TOKEN}
+      GRAFANA_RO_PASSWORD: ${GRAFANA_RO_PASSWORD:?defina GRAFANA_RO_PASSWORD}
+      GRAFANA_PUBLIC_URL: ${GRAFANA_PUBLIC_URL:-}
+      TZ: ${TZ:-America/Sao_Paulo}
+      GLPI_URL: ${GLPI_URL:-}
+      GLPI_APP_TOKEN: ${GLPI_APP_TOKEN:-}
+      GLPI_USER_TOKEN: ${GLPI_USER_TOKEN:-}
+      GLPI_ENTITY_ID: ${GLPI_ENTITY_ID:-}
+      GLPI_CATEGORY_ID: ${GLPI_CATEGORY_ID:-}
+      GLPI_ASSIGN_GROUP_ID: ${GLPI_ASSIGN_GROUP_ID:-}
+      GLPI_AUTO_SOLVE: ${GLPI_AUTO_SOLVE:-true}
+      GLPI_VERIFY_TLS: ${GLPI_VERIFY_TLS:-true}
+      ALERT_CPU_PERCENT: ${ALERT_CPU_PERCENT:-90}
+      ALERT_MEMORY_PERCENT: ${ALERT_MEMORY_PERCENT:-95}
+      ALERT_SUSTAINED_MINUTES: ${ALERT_SUSTAINED_MINUTES:-10}
+      ALERT_NET_MBPS: ${ALERT_NET_MBPS:-50}
+      ALERT_NET_MINUTES: ${ALERT_NET_MINUTES:-15}
+      ALERT_NET_DAILY_GB: ${ALERT_NET_DAILY_GB:-20}
+      ALERT_OFFLINE_ENABLED: ${ALERT_OFFLINE_ENABLED:-false}
+      ALERT_OFFLINE_MINUTES: ${ALERT_OFFLINE_MINUTES:-15}
+      BUSINESS_HOURS: ${BUSINESS_HOURS:-08:00-18:00}
+      HEALTH_ALERT_IGNORE: ${HEALTH_ALERT_IGNORE:-cpu,memory,collector,battery}
+      RETENTION_DAYS: ${RETENTION_DAYS:-30}
+    ports:
+      - "${API_PORT:-8000}:8000"
+
+  grafana:
+    image: grafana/grafana-oss:11.4.0
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?defina GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_PUBLIC_URL:-}
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/tia-overview.json
+      GF_DEFAULT_LOCALE: pt-BR
+      GRAFANA_RO_PASSWORD: ${GRAFANA_RO_PASSWORD}
+      TZ: ${TZ:-America/Sao_Paulo}
+    volumes:
+      - tia-grafana:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+
+volumes:
+  tia-db:
+  tia-grafana:
